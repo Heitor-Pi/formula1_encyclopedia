@@ -95,3 +95,36 @@ function normalizeText(value) {
 function getTeamColor(constructorId) {
   return TEAM_COLORS[constructorId] || "#e10600";
 }
+
+function getF1CarSvg(teamColor) {
+  return `
+    <svg viewBox="0 0 420 160" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ilustração de carro de Fórmula 1">
+      <ellipse cx="210" cy="132" rx="178" ry="9" fill="rgba(0,0,0,0.52)"/>
+      <!-- Asa traseira -->
+      <path d="M36 62 L58 62 L62 104 L42 104 Z" fill="#1e293b" stroke="rgba(255,255,255,0.22)" stroke-width="1.5"/>
+      <!-- Capô do motor / barbatana -->
+      <path d="M58 92 L134 68 L174 66 L196 84 L318 96 L364 106 L360 116 L60 116 Z" fill="${teamColor}" stroke="rgba(255,255,255,0.25)" stroke-width="1.8"/>
+      <!-- Halo e cockpit -->
+      <path d="M188 84 C198 68 232 68 244 88" stroke="#0f172a" stroke-width="6" stroke-linecap="round"/>
+      <circle cx="206" cy="78" r="9" fill="#f8fafc" stroke="#0f172a" stroke-width="2"/>
+      <!-- Asa dianteira -->
+      <path d="M342 108 L390 112 L386 120 L336 118 Z" fill="#1e293b" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
+      <!-- Pneus -->
+      <circle cx="104" cy="112" r="24" fill="#0f172a" stroke="#334155" stroke-width="4"/>
+      <circle cx="104" cy="112" r="11" fill="#64748b"/>
+      <circle cx="312" cy="112" r="22" fill="#0f172a" stroke="#334155" stroke-width="4"/>
+      <circle cx="312" cy="112" r="10" fill="#64748b"/>
+    </svg>
+  `;
+}
+
+function getDriverHelmetSvg(teamColor) {
+  return `
+    <svg viewBox="0 0 220 200" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ilustração de capacete de piloto de Fórmula 1">
+      <ellipse cx="110" cy="176" rx="68" ry="8" fill="rgba(0,0,0,0.45)"/>
+      <path d="M56 116 C56 66 86 42 122 42 C156 42 174 68 174 104 C174 134 152 152 118 152 L66 152 C59 152 56 138 56 116 Z" fill="${teamColor}" stroke="rgba(255,255,255,0.3)" stroke-width="2.5"/>
+      <path d="M116 74 L172 80 L170 108 L114 104 C106 104 104 74 116 74 Z" fill="#0f172a" stroke="#94a3b8" stroke-width="2"/>
+      <path d="M62 124 L112 124" stroke="rgba(255,255,255,0.45)" stroke-width="4" stroke-linecap="round"/>
+    </svg>
+  `;
+}
