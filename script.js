@@ -377,3 +377,111 @@ async function fetchCommonsSearchImage(searchTerms) {
   }
   return null;
 }
+
+async function getDriverPhoto(entry) {
+  const key = entry.driverId || normalizeText(entry.fullName);
+  if (driverImageCache.has(key)) return driverImageCache.get(key);
+
+  let result = null;
+  try {
+    const wikiTitle = extractWikiTitle(entry.driverUrl);
+    result = await fetchWikiPageImageByTitle(wikiTitle);
+    if (!result) {
+      result = await fetchWikiSearchImage(
+        `${entry.fullName} Formula One driver`,
+        [entry.familyName]
+      );
+    }
+    if (!result) {
+      result = await fetchCommonsSearchImage([
+        `${entry.fullName} Formula One`,
+        entry.fullName,
+      ]);
+    }
+  } catch (error) {
+    console.warn("Erro ao buscar foto do piloto:", error);
+  }
+
+  driverImageCache.set(key, result);
+  return result;
+}
+
+async function getTeamCarPhoto(entry) {
+  const key = `${entry.constructorId}|${entry.season}`;
+  if (carImageCache.has(key)) return carImageCache.get(key);
+
+  let result = null;
+  try {
+    // 1. Busca foto no Wikimedia Commons do carro daquela scuderia naquele ano
+    result = await fetchCommonsSearchImage([
+      `${entry.season} ${entry.teamName} Formula One`,
+      `${entry.teamName} ${entry.season} F1`,
+    ]);
+
+    // 2. Fallback: artigo do carro/scuderia na Wikipedia
+    if (!result) {
+      result = await fetchWikiSearchImage(
+        `${entry.season} ${entry.teamName} Formula One car`,
+        [entry.teamName]
+      );
+    }
+    if (!result) {
+      const teamTitle = extractWikiTitle(entry.teamUrl);
+      result = await fetchWikiPageImageByTitle(teamTitle);
+    }
+  } catch (error) {
+    console.warn("Erro ao buscar foto do carro:", error);
+  }
+
+  carImageCache.set(key, result);
+  return result;
+}
+
+async function loadEntryMedia(entry) {
+  const mediaRequestId = ++latestMediaRequestId;
+  const fallbackCarSvg = getF1CarSvg(entry.teamColor);
+  const fallbackDriverSvg = getDriverHelmetSvg(entry.teamColor);
+
+  const driverKey = entry.driverId || normalizeText(entry.fullName);
+  const carKey = `${entry.constructorId}|${entry.season}`;
+
+  if (!driverImageCache.has(driverKey)) {
+    setVisualFallback(driverVisual, fallbackDriverSvg, "Buscando foto...");
+  }
+  if (!carImageCache.has(carKey)) {
+    setVisualFallback(carVisual, fallbackCarSvg, "Buscando carro...");
+  }
+
+  const [driverPhoto, carPhoto] = await Promise.all([
+    getDriverPhoto(entry),
+    getTeamCarPhoto(entry),
+  ]);
+
+  if (mediaRequestId !== latestMediaRequestId) return;
+
+  if (driverPhoto) {
+    setVisualPhoto(
+      driverVisual,
+      driverPhoto.url,
+      `Foto do piloto ${entry.fullName}`,
+      "media-photo--driver",
+      `Foto • ${driverPhoto.source}`,
+      fallbackDriverSvg
+    );
+  } else {
+    setVisualFallback(driverVisual, fallbackDriverSvg, "Capacete");
+  }
+
+  if (carPhoto) {
+    setVisualPhoto(
+      carVisual,
+      carPhoto.url,
+      `Carro da ${entry.teamName} na temporada ${entry.season}`,
+      "media-photo--car",
+      `Carro ${entry.season} • ${carPhoto.source}`,
+      fallbackCarSvg
+    );
+  } else {
+    setVisualFallback(carVisual, fallbackCarSvg, `F1 ${entry.season}`);
+  }
+}
