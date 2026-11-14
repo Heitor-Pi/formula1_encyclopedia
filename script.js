@@ -1,0 +1,36 @@
+const JOLPICA_BASE_URL = "https://api.jolpi.ca/ergast/f1";
+
+const ICONIC_YEARS = ["2024", "2021", "2012", "2007", "1994", "1991", "1988", "1976"];
+
+const TEAM_COLORS = {
+  ferrari: "#dc0000",
+  red_bull: "#3671c6",
+  mclaren: "#ff8000",
+  mercedes: "#27f4d2",
+  aston_martin: "#229971",
+  williams: "#64c4ff",
+  alpine: "#0093cc",
+  renault: "#fff500",
+  rb: "#6692ff",
+  alphatauri: "#5e8faa",
+  toro_rosso: "#469bff",
+  sauber: "#52e252",
+  alfa: "#c92d4b",
+  haas: "#b6babd",
+  lotus_f1: "#d4af37",
+  team_lotus: "#d4af37",
+  lotus_racing: "#006f46",
+  brawn: "#b5ff00",
+  benetton: "#00a859",
+  jordan: "#eab308",
+  tyrrell: "#3b82f6",
+  brabham: "#38bdf8",
+  force_india: "#f596c8",
+  racing_point: "#f596c8",
+  bar: "#e2e8f0",
+  stewart: "#e2e8f0",
+  jaguar: "#15803d",
+  toyota: "#ef4444",
+  honda: "#e2e8f0",
+  bmw_sauber: "#2563eb",
+};
