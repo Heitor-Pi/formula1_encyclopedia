@@ -255,3 +255,51 @@ body {
   text-decoration: underline;
   margin-left: 6px;
 }
+
+/* Carrossel / Vitrine */
+.carousel-wrapper {
+  display: grid;
+  grid-template-columns: 54px 1fr 54px;
+  align-items: center;
+  gap: 16px;
+}
+
+.arrow-btn {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+  transition: all var(--transition);
+}
+
+.arrow-btn svg {
+  width: 24px;
+  height: 24px;
+}
+
+.arrow-btn:hover:not(:disabled) {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  transform: scale(1.06);
+  box-shadow: 0 10px 24px var(--accent-glow);
+}
+
+.arrow-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.arrow-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.arrow-btn:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
