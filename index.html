@@ -97,7 +97,97 @@
 
         <p id="search-feedback" class="search-feedback" role="status" aria-live="polite"></p>
       </section>
+
+      <!-- Vitrine com setas para passar e voltar pelos pilotos da scuderia -->
+      <section class="showcase-section" aria-label="Vitrine da scuderia, piloto e carro">
+        <div class="carousel-wrapper">
+          <button
+            type="button"
+            id="prev-entry-btn"
+            class="arrow-btn arrow-prev"
+            aria-label="Voltar para o piloto anterior da scuderia"
+            title="Piloto anterior"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true">
+              <path d="m15 18-6-6 6-6" />
+            </svg>
+          </button>
+
+          <article class="f1-card" id="f1-card" aria-live="polite">
+            <div class="card-accent-bar" id="card-accent-bar"></div>
+
+            <div class="f1-card-top">
+              <div class="f1-badges">
+                <span class="badge badge-team" id="card-team-badge">Scuderia</span>
+                <span class="badge badge-season" id="card-season-badge">Temporada</span>
+                <span class="badge badge-number" id="card-number-badge">#—</span>
+              </div>
+              <span class="entry-counter" id="entry-counter">1 / 1</span>
+            </div>
+
+            <!-- Vitrine dupla: Foto do Piloto + Foto do Carro da Scuderia no Ano -->
+            <div class="media-grid">
+              <div class="media-box">
+                <span class="media-tag">Piloto</span>
+                <div class="media-frame" id="driver-visual"></div>
+              </div>
+              <div class="media-box">
+                <span class="media-tag" id="car-media-tag">Carro da Scuderia</span>
+                <div class="media-frame" id="car-visual"></div>
+              </div>
+            </div>
+
+            <div class="f1-info">
+              <div class="f1-headline">
+                <div>
+                  <h2 id="driver-title">Nome do Piloto</h2>
+                  <p class="f1-subtitle" id="driver-subtitle">Scuderia • Nacionalidade</p>
+                </div>
+                <div class="standing-box">
+                  <span class="standing-label">Classificação</span>
+                  <strong class="standing-pos" id="driver-position">—</strong>
+                </div>
+              </div>
+
+              <dl class="specs-grid">
+                <div class="spec-item">
+                  <dt>Scuderia</dt>
+                  <dd id="spec-team">—</dd>
+                </div>
+                <div class="spec-item">
+                  <dt>Temporada</dt>
+                  <dd id="spec-season">—</dd>
+                </div>
+                <div class="spec-item">
+                  <dt>Pontos</dt>
+                  <dd id="spec-points">—</dd>
+                </div>
+                <div class="spec-item">
+                  <dt>Vitórias</dt>
+                  <dd id="spec-wins">—</dd>
+                </div>
+              </dl>
+            </div>
+
+            <div class="carousel-dots" id="carousel-dots" aria-label="Indicadores de pilotos da scuderia"></div>
+          </article>
+
+          <button
+            type="button"
+            id="next-entry-btn"
+            class="arrow-btn arrow-next"
+            aria-label="Passar para o próximo piloto da scuderia"
+            title="Próximo piloto"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true">
+              <path d="m9 18 6-6-6-6" />
+            </svg>
+          </button>
+        </div>
+      </section>
     </main>
   </div>
+
+  <script src="script.js"></script>
 </body>
 </html>
