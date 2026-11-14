@@ -128,3 +128,57 @@ function getDriverHelmetSvg(teamColor) {
     </svg>
   `;
 }
+
+function setFeedback(message, type = "", externalLink = null) {
+  searchFeedback.className = "search-feedback";
+  if (type) searchFeedback.classList.add(type);
+  searchFeedback.textContent = message;
+
+  if (externalLink) {
+    const link = document.createElement("a");
+    link.className = "external-search-link";
+    link.href = externalLink.url;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.textContent = externalLink.label;
+    searchFeedback.appendChild(link);
+  }
+}
+
+function populateYearDatalist() {
+  yearsDatalist.innerHTML = "";
+  const currentYear = new Date().getFullYear();
+  const maxYear = Math.min(currentYear, 2026);
+  const fragment = document.createDocumentFragment();
+  for (let year = maxYear; year >= 1950; year -= 1) {
+    const option = document.createElement("option");
+    option.value = String(year);
+    fragment.appendChild(option);
+  }
+  yearsDatalist.appendChild(fragment);
+}
+
+function populateTeamDatalist(teams) {
+  teamsDatalist.innerHTML = "";
+  const fragment = document.createDocumentFragment();
+  for (const team of teams) {
+    const option = document.createElement("option");
+    option.value = team.name;
+    fragment.appendChild(option);
+  }
+  teamsDatalist.appendChild(fragment);
+}
+
+function populateDriverDatalist(entries) {
+  driversDatalist.innerHTML = "";
+  const seen = new Set();
+  const fragment = document.createDocumentFragment();
+  for (const entry of entries) {
+    if (seen.has(entry.driverId)) continue;
+    seen.add(entry.driverId);
+    const option = document.createElement("option");
+    option.value = entry.fullName;
+    fragment.appendChild(option);
+  }
+  driversDatalist.appendChild(fragment);
+}
