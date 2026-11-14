@@ -485,3 +485,70 @@ async function loadEntryMedia(entry) {
     setVisualFallback(carVisual, fallbackCarSvg, `F1 ${entry.season}`);
   }
 }
+
+function renderEmptyState(teamName, season) {
+  cardAccentBar.style.background = "#e10600";
+  cardTeamBadge.textContent = teamName || "Scuderia";
+  cardSeasonBadge.textContent = `Temporada ${season}`;
+  cardNumberBadge.textContent = "#—";
+  entryCounter.textContent = "0 / 0";
+  setVisualFallback(driverVisual, getDriverHelmetSvg("#64748b"), "Sem foto");
+  setVisualFallback(carVisual, getF1CarSvg("#64748b"), "Sem carro");
+  carMediaTag.textContent = "Carro da Scuderia";
+
+  driverTitle.textContent = "Nenhum registro encontrado";
+  driverSubtitle.textContent = `Não encontramos pilotos para ${teamName || "essa busca"} em ${season}.`;
+  driverPosition.textContent = "—";
+  specTeam.textContent = teamName || "—";
+  specSeason.textContent = season || "—";
+  specPoints.textContent = "—";
+  specWins.textContent = "—";
+  prevBtn.disabled = true;
+  nextBtn.disabled = true;
+  carouselDots.innerHTML = "";
+}
+
+function renderCurrentEntry({ syncInputs = false } = {}) {
+  const entry = activeTeamEntries[currentIndex];
+  if (!entry) {
+    renderEmptyState(activeTeam, activeSeason);
+    return;
+  }
+
+  f1Card.classList.add("is-switching");
+  window.setTimeout(() => {
+    f1Card.classList.remove("is-switching");
+  }, 150);
+
+  f1Card.style.setProperty("--team-color", entry.teamColor);
+  cardAccentBar.style.background = entry.teamColor;
+  cardTeamBadge.textContent = entry.teamName;
+  cardSeasonBadge.textContent = `Temporada ${entry.season}`;
+  cardNumberBadge.textContent = entry.number ? `#${entry.number}` : entry.code || "F1";
+  entryCounter.textContent = `${currentIndex + 1} / ${activeTeamEntries.length} em ${entry.teamName}`;
+  carMediaTag.textContent = `Carro • ${entry.teamName} (${entry.season})`;
+
+  driverTitle.textContent = entry.fullName;
+  driverSubtitle.textContent = `${entry.teamName} (${entry.teamNationality}) • Piloto ${entry.driverNationality}`;
+  driverPosition.textContent = entry.position ? `${entry.position}º lugar` : "—";
+
+  specTeam.textContent = entry.teamName;
+  specSeason.textContent = entry.season;
+  specPoints.textContent = `${entry.points} pts`;
+  specWins.textContent = String(entry.wins);
+
+  const hasMultiple = activeTeamEntries.length > 1;
+  prevBtn.disabled = isLoading || !hasMultiple;
+  nextBtn.disabled = isLoading || !hasMultiple;
+
+  renderCarouselDots();
+  renderTeamPills();
+  renderYearPills();
+  loadEntryMedia(entry);
+
+  if (syncInputs) {
+    teamInput.value = entry.teamName;
+    driverInput.value = entry.fullName;
+    yearInput.value = entry.season;
+  }
+}
