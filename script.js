@@ -855,3 +855,149 @@ async function loadSeasonAndSelect(
     }
   }
 }
+
+function stepEntry(delta) {
+  if (isLoading || activeTeamEntries.length <= 1) return;
+  currentIndex =
+    (currentIndex + delta + activeTeamEntries.length) % activeTeamEntries.length;
+  renderCurrentEntry({ syncInputs: true });
+  setFeedback("");
+}
+
+// Navegação pelas setas
+prevBtn.addEventListener("click", () => stepEntry(-1));
+nextBtn.addEventListener("click", () => stepEntry(1));
+
+// Clique nos pontos indicadores
+carouselDots.addEventListener("click", (event) => {
+  const dot = event.target.closest(".dot-btn");
+  if (!dot) return;
+  currentIndex = Number(dot.dataset.index);
+  renderCurrentEntry({ syncInputs: true });
+  setFeedback("");
+});
+
+// Clique nas pílulas de scuderia
+teamPillsContainer.addEventListener("click", (event) => {
+  const pill = event.target.closest(".pill-btn");
+  if (!pill || isLoading) return;
+  const chosenTeam = pill.dataset.team;
+  selectTeamInCurrentSeason(chosenTeam, "", { syncInputs: true });
+  setFeedback(
+    `Scuderia ${chosenTeam} (${activeSeason}) selecionada. Use as setas para alternar entre os pilotos.`
+  );
+});
+
+// Clique nas pílulas de anos icônicos
+yearPillsContainer.addEventListener("click", (event) => {
+  const pill = event.target.closest(".pill-btn");
+  if (!pill) return;
+  const chosenYear = pill.dataset.year;
+  yearInput.value = chosenYear;
+  driverInput.value = "";
+  loadSeasonAndSelect(chosenYear, {
+    syncInputs: true,
+  });
+});
+
+// Ao selecionar uma scuderia da lista, filtra os pilotos sugeridos para ela
+teamInput.addEventListener("change", () => {
+  const typedTeam = teamInput.value.trim();
+  if (!typedTeam) {
+    populateDriverDatalist(seasonEntries);
+    return;
+  }
+  const matched = seasonTeams.find(
+    (t) => normalizeText(t.name) === normalizeText(typedTeam)
+  );
+  if (matched) {
+    selectTeamInCurrentSeason(matched.name, "", { syncInputs: false });
+  }
+});
+
+// Botão principal: pesquisa direta por scuderia, piloto e temporada
+searchForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  const rawTeam = teamInput.value.trim();
+  const rawDriver = driverInput.value.trim();
+  const rawYear = yearInput.value.trim() || activeSeason;
+
+  const numericYear = Number(rawYear);
+  if (!Number.isInteger(numericYear) || numericYear < 1950 || numericYear > 2026) {
+    setFeedback(
+      "Informe um ano válido entre 1950 e 2026.",
+      "is-error"
+    );
+    yearInput.focus();
+    return;
+  }
+
+  if (!rawTeam && !rawDriver) {
+    await loadSeasonAndSelect(String(numericYear), { syncInputs: true });
+    return;
+  }
+
+  if (String(numericYear) !== activeSeason || seasonEntries.length === 0) {
+    await loadSeasonAndSelect(String(numericYear), {
+      teamQuery: rawTeam,
+      driverQuery: rawDriver,
+      syncInputs: true,
+    });
+    return;
+  }
+
+  const result = selectTeamInCurrentSeason(rawTeam, rawDriver, {
+    syncInputs: true,
+  });
+
+  if (result.found && result.entry) {
+    setFeedback(
+      `Resultado encontrado: ${result.entry.fullName} • ${result.entry.teamName} (${result.entry.season}).`,
+      "is-success"
+    );
+  } else if (result.reason === "driver_not_found") {
+    const googleUrl = `https://www.google.com/search?q=${encodeURIComponent(
+      `${rawDriver} ${rawYear} Formula 1`
+    )}`;
+    setFeedback(
+      `Piloto "${rawDriver}" não encontrado na temporada ${rawYear}.`,
+      "is-error",
+      { url: googleUrl, label: "Pesquisar no Google" }
+    );
+  } else if (result.reason === "team_not_found") {
+    const googleUrl = `https://www.google.com/search?q=${encodeURIComponent(
+      `${rawTeam} ${rawYear} Formula 1`
+    )}`;
+    setFeedback(
+      `Scuderia "${rawTeam}" não encontrada na temporada ${rawYear}.`,
+      "is-error",
+      { url: googleUrl, label: "Pesquisar no Google" }
+    );
+  } else if (result.reason === "driver_not_in_team") {
+    setFeedback(
+      `Piloto "${rawDriver}" não correu pela ${activeTeam} em ${rawYear}. Exibindo os pilotos da equipe.`,
+      "is-error"
+    );
+  }
+});
+
+// Atalho de teclado com setas quando fora dos inputs
+document.addEventListener("keydown", (event) => {
+  const activeTag = document.activeElement?.tagName;
+  if (activeTag === "INPUT" || activeTag === "TEXTAREA") return;
+
+  if (event.key === "ArrowLeft") {
+    stepEntry(-1);
+  } else if (event.key === "ArrowRight") {
+    stepEntry(1);
+  }
+});
+
+// Inicialização
+populateYearDatalist();
+renderYearPills();
+loadSeasonAndSelect(activeSeason, {
+  teamQuery: activeTeam,
+  syncInputs: true,
+});
