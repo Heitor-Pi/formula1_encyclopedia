@@ -466,3 +466,98 @@ body {
   border-radius: var(--radius-pill);
   pointer-events: none;
 }
+
+/* Informações do Piloto e Temporada */
+.f1-headline {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.f1-headline h2 {
+  font-size: 1.65rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.f1-subtitle {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  margin-top: 2px;
+}
+
+.standing-box {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.standing-label {
+  display: block;
+  font-size: 0.73rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.standing-pos {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.specs-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.spec-item {
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+}
+
+.spec-item dt {
+  font-size: 0.73rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.spec-item dd {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* Indicadores */
+.carousel-dots {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.dot-btn {
+  width: 9px;
+  height: 9px;
+  border-radius: var(--radius-pill);
+  border: none;
+  background: rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.dot-btn:hover {
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.dot-btn.active {
+  width: 26px;
+  background: var(--accent-primary);
+}
