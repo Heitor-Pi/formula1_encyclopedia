@@ -34,3 +34,64 @@ const TEAM_COLORS = {
   honda: "#e2e8f0",
   bmw_sauber: "#2563eb",
 };
+
+// Elementos da interface
+const teamInput = document.getElementById("team-input");
+const driverInput = document.getElementById("driver-input");
+const yearInput = document.getElementById("year-input");
+const teamsDatalist = document.getElementById("teams-datalist");
+const driversDatalist = document.getElementById("drivers-datalist");
+const yearsDatalist = document.getElementById("years-datalist");
+const searchForm = document.getElementById("f1-search-form");
+const teamPillsContainer = document.getElementById("team-pills");
+const yearPillsContainer = document.getElementById("year-pills");
+const searchFeedback = document.getElementById("search-feedback");
+
+const prevBtn = document.getElementById("prev-entry-btn");
+const nextBtn = document.getElementById("next-entry-btn");
+const f1Card = document.getElementById("f1-card");
+const cardAccentBar = document.getElementById("card-accent-bar");
+const cardTeamBadge = document.getElementById("card-team-badge");
+const cardSeasonBadge = document.getElementById("card-season-badge");
+const cardNumberBadge = document.getElementById("card-number-badge");
+const entryCounter = document.getElementById("entry-counter");
+
+const driverVisual = document.getElementById("driver-visual");
+const carVisual = document.getElementById("car-visual");
+const carMediaTag = document.getElementById("car-media-tag");
+
+const driverTitle = document.getElementById("driver-title");
+const driverSubtitle = document.getElementById("driver-subtitle");
+const driverPosition = document.getElementById("driver-position");
+const specTeam = document.getElementById("spec-team");
+const specSeason = document.getElementById("spec-season");
+const specPoints = document.getElementById("spec-points");
+const specWins = document.getElementById("spec-wins");
+const carouselDots = document.getElementById("carousel-dots");
+
+// Estado da aplicação
+let activeSeason = "2024";
+let activeTeam = "Ferrari";
+let seasonEntries = [];
+let seasonTeams = [];
+let activeTeamEntries = [];
+let currentIndex = 0;
+let isLoading = false;
+let latestSeasonRequestId = 0;
+let latestMediaRequestId = 0;
+
+const seasonCache = new Map();
+const driverImageCache = new Map();
+const carImageCache = new Map();
+
+function normalizeText(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function getTeamColor(constructorId) {
+  return TEAM_COLORS[constructorId] || "#e10600";
+}
