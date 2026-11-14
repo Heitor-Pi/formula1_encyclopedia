@@ -671,3 +671,187 @@ async function fetchSeasonData(season) {
   seasonCache.set(season, payload);
   return payload;
 }
+
+function selectTeamInCurrentSeason(teamQuery, driverQuery = "", { syncInputs = true } = {}) {
+  const normTeam = normalizeText(teamQuery);
+  const normDriver = normalizeText(driverQuery);
+
+  // 1. Se digitou apenas o piloto (sem scuderia), acha o piloto na temporada toda
+  if (!normTeam && normDriver) {
+    const matchedDriver =
+      seasonEntries.find((e) => normalizeText(e.fullName) === normDriver) ||
+      seasonEntries.find((e) => normalizeText(e.fullName).includes(normDriver));
+
+    if (!matchedDriver) {
+      return { found: false, reason: "driver_not_found" };
+    }
+
+    activeTeam = matchedDriver.teamName;
+    activeTeamEntries = seasonEntries.filter(
+      (e) => e.constructorId === matchedDriver.constructorId
+    );
+    currentIndex = activeTeamEntries.findIndex(
+      (e) => e.driverId === matchedDriver.driverId
+    );
+    renderCurrentEntry({ syncInputs });
+    return { found: true, entry: matchedDriver };
+  }
+
+  // 2. Procura a scuderia
+  let matchedTeam =
+    seasonTeams.find((t) => normalizeText(t.name) === normTeam) ||
+    seasonTeams.find((t) => normalizeText(t.name).includes(normTeam));
+
+  if (!matchedTeam && normTeam) {
+    return { found: false, reason: "team_not_found" };
+  }
+
+  if (!matchedTeam) {
+    matchedTeam = seasonTeams[0];
+  }
+
+  if (!matchedTeam) {
+    activeTeam = teamQuery || "Scuderia";
+    activeTeamEntries = [];
+    currentIndex = 0;
+    renderEmptyState(activeTeam, activeSeason);
+    return { found: false, reason: "season_empty" };
+  }
+
+  activeTeam = matchedTeam.name;
+  activeTeamEntries = seasonEntries.filter(
+    (e) => e.constructorId === matchedTeam.id
+  );
+  populateDriverDatalist(activeTeamEntries);
+
+  let targetIdx = 0;
+  let driverMatched = true;
+
+  if (normDriver) {
+    const exactDriverIdx = activeTeamEntries.findIndex(
+      (e) => normalizeText(e.fullName) === normDriver
+    );
+    const partialDriverIdx =
+      exactDriverIdx !== -1
+        ? exactDriverIdx
+        : activeTeamEntries.findIndex((e) =>
+            normalizeText(e.fullName).includes(normDriver)
+          );
+
+    if (partialDriverIdx !== -1) {
+      targetIdx = partialDriverIdx;
+    } else {
+      driverMatched = false;
+    }
+  }
+
+  currentIndex = targetIdx;
+  renderCurrentEntry({ syncInputs });
+
+  return {
+    found: driverMatched,
+    reason: driverMatched ? "" : "driver_not_in_team",
+    entry: activeTeamEntries[currentIndex],
+  };
+}
+
+async function loadSeasonAndSelect(
+  season,
+  { teamQuery = "", driverQuery = "", syncInputs = true, quiet = false } = {}
+) {
+  const requestId = ++latestSeasonRequestId;
+  isLoading = true;
+  prevBtn.disabled = true;
+  nextBtn.disabled = true;
+
+  if (!quiet) {
+    setFeedback(`Carregando dados da temporada ${season} na API Jolpica F1...`);
+  }
+
+  try {
+    const data = await fetchSeasonData(season);
+    if (requestId !== latestSeasonRequestId) return;
+
+    activeSeason = season;
+    seasonEntries = data.entries;
+    seasonTeams = data.teams;
+    populateTeamDatalist(seasonTeams);
+    populateDriverDatalist(seasonEntries);
+
+    if (seasonEntries.length === 0) {
+      activeTeam = teamQuery || "";
+      activeTeamEntries = [];
+      currentIndex = 0;
+      renderEmptyState(activeTeam, activeSeason);
+      renderTeamPills();
+      renderYearPills();
+      setFeedback(
+        `A API não retornou registros para a temporada ${season}. Tente um ano entre 1950 e 2025.`,
+        "is-error"
+      );
+      return;
+    }
+
+    const chosenTeam =
+      teamQuery ||
+      (seasonTeams.some((t) => normalizeText(t.name) === normalizeText(activeTeam))
+        ? activeTeam
+        : seasonTeams[0]?.name || "");
+
+    const result = selectTeamInCurrentSeason(chosenTeam, driverQuery, {
+      syncInputs,
+    });
+
+    if (result.found && result.entry) {
+      if (driverQuery) {
+        setFeedback(
+          `Resultado encontrado: ${result.entry.fullName} • ${result.entry.teamName} (${result.entry.season}).`,
+          "is-success"
+        );
+      } else if (!quiet) {
+        setFeedback(
+          `Temporada ${activeSeason}: exibindo pilotos e carro de ${result.entry.teamName}. Use as setas para navegar.`,
+          "is-success"
+        );
+      }
+    } else if (result.reason === "driver_not_found") {
+      const googleUrl = `https://www.google.com/search?q=${encodeURIComponent(
+        `${driverQuery} ${season} Formula 1`
+      )}`;
+      setFeedback(
+        `Piloto "${driverQuery}" não encontrado na temporada ${season}.`,
+        "is-error",
+        { url: googleUrl, label: "Pesquisar no Google" }
+      );
+    } else if (result.reason === "team_not_found") {
+      const googleUrl = `https://www.google.com/search?q=${encodeURIComponent(
+        `${teamQuery} ${season} Formula 1`
+      )}`;
+      setFeedback(
+        `Scuderia "${teamQuery}" não competiu na temporada ${season}.`,
+        "is-error",
+        { url: googleUrl, label: "Pesquisar no Google" }
+      );
+    } else if (result.reason === "driver_not_in_team") {
+      setFeedback(
+        `Piloto "${driverQuery}" não correu pela ${activeTeam} em ${season}. Exibindo os pilotos da equipe.`,
+        "is-error"
+      );
+    }
+  } catch (error) {
+    if (requestId !== latestSeasonRequestId) return;
+    console.error("Erro ao consultar API Jolpica F1:", error);
+    renderEmptyState(teamQuery || activeTeam, season);
+    setFeedback(
+      "Não foi possível consultar a API de Fórmula 1 no momento. Verifique sua conexão.",
+      "is-error"
+    );
+  } finally {
+    if (requestId === latestSeasonRequestId) {
+      isLoading = false;
+      const hasMultiple = activeTeamEntries.length > 1;
+      prevBtn.disabled = !hasMultiple;
+      nextBtn.disabled = !hasMultiple;
+    }
+  }
+}
