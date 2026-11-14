@@ -552,3 +552,122 @@ function renderCurrentEntry({ syncInputs = false } = {}) {
     yearInput.value = entry.season;
   }
 }
+
+async function fetchSeasonData(season) {
+  if (seasonCache.has(season)) {
+    return seasonCache.get(season);
+  }
+
+  const response = await fetch(
+    `${JOLPICA_BASE_URL}/${encodeURIComponent(season)}/driverstandings.json?limit=100`
+  );
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status} ao buscar temporada ${season}.`);
+  }
+
+  const data = await response.json();
+  const standings =
+    data?.MRData?.StandingsTable?.StandingsLists?.[0]?.DriverStandings || [];
+
+  const entries = [];
+  const teamsMap = new Map();
+
+  for (const row of standings) {
+    const driver = row.Driver || {};
+    const constructors = row.Constructors || [];
+    const fullName = `${driver.givenName || ""} ${driver.familyName || ""}`.trim();
+
+    for (const ctor of constructors) {
+      const teamColor = getTeamColor(ctor.constructorId);
+      if (!teamsMap.has(ctor.constructorId)) {
+        teamsMap.set(ctor.constructorId, {
+          id: ctor.constructorId,
+          name: ctor.name,
+          nationality: ctor.nationality || "",
+          url: ctor.url || "",
+          color: teamColor,
+        });
+      }
+
+      entries.push({
+        season,
+        driverId: driver.driverId,
+        fullName,
+        familyName: driver.familyName || "",
+        driverNationality: driver.nationality || "",
+        driverUrl: driver.url || "",
+        number: driver.permanentNumber || "",
+        code: driver.code || "",
+        position: row.position || "",
+        points: row.points ?? "0",
+        wins: row.wins ?? "0",
+        constructorId: ctor.constructorId,
+        teamName: ctor.name,
+        teamNationality: ctor.nationality || "",
+        teamUrl: ctor.url || "",
+        teamColor,
+      });
+    }
+  }
+
+  // Fallback caso uma temporada ainda não tenha standings consolidados (usa results)
+  if (entries.length === 0) {
+    const resFallback = await fetch(
+      `${JOLPICA_BASE_URL}/${encodeURIComponent(season)}/results.json?limit=100`
+    );
+    if (resFallback.ok) {
+      const fallbackData = await resFallback.json();
+      const races = fallbackData?.MRData?.RaceTable?.Races || [];
+      const seenPairs = new Set();
+
+      for (const race of races) {
+        for (const result of race.Results || []) {
+          const driver = result.Driver || {};
+          const ctor = result.Constructor || {};
+          const pairKey = `${driver.driverId}|${ctor.constructorId}`;
+          if (!driver.driverId || !ctor.constructorId || seenPairs.has(pairKey)) {
+            continue;
+          }
+          seenPairs.add(pairKey);
+
+          const teamColor = getTeamColor(ctor.constructorId);
+          if (!teamsMap.has(ctor.constructorId)) {
+            teamsMap.set(ctor.constructorId, {
+              id: ctor.constructorId,
+              name: ctor.name,
+              nationality: ctor.nationality || "",
+              url: ctor.url || "",
+              color: teamColor,
+            });
+          }
+
+          entries.push({
+            season,
+            driverId: driver.driverId,
+            fullName: `${driver.givenName || ""} ${driver.familyName || ""}`.trim(),
+            familyName: driver.familyName || "",
+            driverNationality: driver.nationality || "",
+            driverUrl: driver.url || "",
+            number: result.number || driver.permanentNumber || "",
+            code: driver.code || "",
+            position: "",
+            points: "0",
+            wins: "0",
+            constructorId: ctor.constructorId,
+            teamName: ctor.name,
+            teamNationality: ctor.nationality || "",
+            teamUrl: ctor.url || "",
+            teamColor,
+          });
+        }
+      }
+    }
+  }
+
+  const payload = {
+    entries,
+    teams: Array.from(teamsMap.values()),
+  };
+  seasonCache.set(season, payload);
+  return payload;
+}
