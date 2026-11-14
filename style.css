@@ -44,3 +44,41 @@ body {
   margin: 0 auto;
   padding: 28px 20px 48px;
 }
+
+/* Cabeçalho */
+.site-header {
+  margin-bottom: 24px;
+}
+
+.brand-logo {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.logo-mark {
+  width: 52px;
+  height: 46px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #e10600, #991b1b);
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-weight: 900;
+  font-style: italic;
+  font-size: 1.35rem;
+  letter-spacing: -0.04em;
+  box-shadow: 0 10px 24px var(--accent-glow);
+  flex-shrink: 0;
+}
+
+.brand-logo h1 {
+  font-size: 1.65rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
