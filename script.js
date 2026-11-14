@@ -182,3 +182,75 @@ function populateDriverDatalist(entries) {
   }
   driversDatalist.appendChild(fragment);
 }
+
+function renderTeamPills() {
+  teamPillsContainer.innerHTML = "";
+  const fragment = document.createDocumentFragment();
+
+  const topTeams = seasonTeams.slice(0, 8);
+  for (const team of topTeams) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "pill-btn";
+    if (normalizeText(team.name) === normalizeText(activeTeam)) {
+      btn.classList.add("active");
+    }
+    btn.dataset.team = team.name;
+    btn.textContent = team.name;
+    fragment.appendChild(btn);
+  }
+
+  teamPillsContainer.appendChild(fragment);
+}
+
+function renderYearPills() {
+  yearPillsContainer.innerHTML = "";
+  const fragment = document.createDocumentFragment();
+
+  for (const year of ICONIC_YEARS) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "pill-btn";
+    if (year === activeSeason) {
+      btn.classList.add("active");
+    }
+    btn.dataset.year = year;
+    btn.textContent = year;
+    fragment.appendChild(btn);
+  }
+
+  yearPillsContainer.appendChild(fragment);
+}
+
+function renderCarouselDots() {
+  carouselDots.innerHTML = "";
+  const total = activeTeamEntries.length;
+  if (total <= 1) return;
+
+  const maxDots = 12;
+  let start = 0;
+  let end = total;
+  if (total > maxDots) {
+    const half = Math.floor(maxDots / 2);
+    start = Math.max(0, currentIndex - half);
+    end = start + maxDots;
+    if (end > total) {
+      end = total;
+      start = end - maxDots;
+    }
+  }
+
+  const fragment = document.createDocumentFragment();
+  for (let idx = start; idx < end; idx += 1) {
+    const dot = document.createElement("button");
+    dot.type = "button";
+    dot.className = `dot-btn${idx === currentIndex ? " active" : ""}`;
+    dot.dataset.index = String(idx);
+    dot.setAttribute(
+      "aria-label",
+      `Ver ${activeTeamEntries[idx].fullName} (${activeTeamEntries[idx].teamName})`
+    );
+    fragment.appendChild(dot);
+  }
+  carouselDots.appendChild(fragment);
+}
