@@ -254,3 +254,126 @@ function renderCarouselDots() {
   }
   carouselDots.appendChild(fragment);
 }
+
+function setVisualFallback(container, svgHtml, label = "") {
+  container.innerHTML = svgHtml;
+  if (label) {
+    const badge = document.createElement("span");
+    badge.className = "photo-badge";
+    badge.textContent = label;
+    container.appendChild(badge);
+  }
+}
+
+function setVisualPhoto(container, url, altText, variantClass, sourceLabel, fallbackSvg) {
+  const img = document.createElement("img");
+  img.className = `media-photo ${variantClass}`;
+  img.src = url;
+  img.alt = altText;
+  img.loading = "eager";
+
+  img.addEventListener("error", () => {
+    setVisualFallback(container, fallbackSvg, "Ilustração");
+  });
+
+  const badge = document.createElement("span");
+  badge.className = "photo-badge";
+  badge.textContent = sourceLabel;
+
+  container.innerHTML = "";
+  container.appendChild(img);
+  container.appendChild(badge);
+}
+
+function extractWikiTitle(wikiUrl) {
+  if (!wikiUrl) return "";
+  try {
+    const parsed = new URL(wikiUrl);
+    const parts = parsed.pathname.split("/wiki/");
+    return parts[1] ? decodeURIComponent(parts[1]) : "";
+  } catch {
+    return "";
+  }
+}
+
+async function fetchWikiPageImageByTitle(wikiTitle) {
+  if (!wikiTitle) return null;
+  const url =
+    `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(wikiTitle)}` +
+    `&prop=pageimages&pithumbsize=700&format=json&origin=*`;
+  const response = await fetch(url);
+  if (!response.ok) return null;
+
+  const data = await response.json();
+  const pages = Object.values(data?.query?.pages || {});
+  const src = pages[0]?.thumbnail?.source || "";
+  if (!src || src.toLowerCase().includes(".svg")) return null;
+
+  return { url: src, source: "Wikipedia" };
+}
+
+async function fetchWikiSearchImage(query, matchTokens = []) {
+  const url =
+    `https://en.wikipedia.org/w/api.php?action=query&generator=search` +
+    `&gsrsearch=${encodeURIComponent(query)}&gsrlimit=5` +
+    `&prop=pageimages&pithumbsize=900&format=json&origin=*`;
+  const response = await fetch(url);
+  if (!response.ok) return null;
+
+  const data = await response.json();
+  const pages = Object.values(data?.query?.pages || {}).sort(
+    (a, b) => (a.index ?? 999) - (b.index ?? 999)
+  );
+
+  const valid = pages.filter((p) => {
+    const src = p.thumbnail?.source || "";
+    return src && !src.toLowerCase().includes(".svg");
+  });
+
+  const normTokens = matchTokens.map(normalizeText).filter(Boolean);
+  const best =
+    valid.find((p) => {
+      const title = normalizeText(p.title);
+      return normTokens.every((tok) => title.includes(tok));
+    }) || valid[0];
+
+  if (!best) return null;
+  return {
+    url: best.thumbnail.source,
+    title: best.title,
+    source: "Wikipedia",
+  };
+}
+
+async function fetchCommonsSearchImage(searchTerms) {
+  for (const term of searchTerms) {
+    const url =
+      `https://commons.wikimedia.org/w/api.php?action=query&generator=search` +
+      `&gsrsearch=${encodeURIComponent(term)}&gsrnamespace=6&gsrlimit=6` +
+      `&prop=imageinfo&iiprop=url|mime&iiurlwidth=900&format=json&origin=*`;
+    const response = await fetch(url);
+    if (!response.ok) continue;
+
+    const data = await response.json();
+    const pages = Object.values(data?.query?.pages || {}).sort(
+      (a, b) => (a.index ?? 999) - (b.index ?? 999)
+    );
+
+    for (const page of pages) {
+      const info = page.imageinfo?.[0];
+      const mime = info?.mime || "";
+      const imageUrl = info?.thumburl || info?.url;
+      if (
+        imageUrl &&
+        (mime === "image/jpeg" || mime === "image/png" || mime === "image/webp")
+      ) {
+        return {
+          url: imageUrl,
+          title: page.title?.replace(/^File:/i, "") || "",
+          source: "Wikimedia Commons",
+        };
+      }
+    }
+  }
+  return null;
+}
